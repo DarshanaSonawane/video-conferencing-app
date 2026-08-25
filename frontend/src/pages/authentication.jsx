@@ -1,175 +1,72 @@
 import * as React from 'react';
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import Link from '@mui/material/Link';
-import Paper from '@mui/material/Paper';
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import Typography from '@mui/material/Typography';
-import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { Button, Snackbar, TextField } from '@mui/material';
 import { AuthContext } from '../contexts/AuthContext';
-import { Snackbar } from '@mui/material';
-
-
-
-// TODO remove, this demo shouldn't need to reset the theme.
-
-const defaultTheme = createTheme();
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import '../App.css';
 
 export default function Authentication() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { handleRegister, handleLogin } = React.useContext(AuthContext);
+  const [mode, setMode] = React.useState(searchParams.get('mode') === 'signup' ? 'signup' : 'login');
+  const [name, setName] = React.useState('');
+  const [username, setUsername] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [error, setError] = React.useState('');
+  const [message, setMessage] = React.useState('');
+  const [open, setOpen] = React.useState(false);
 
-    
+  React.useEffect(() => {
+    setMode(searchParams.get('mode') === 'signup' ? 'signup' : 'login');
+    setError('');
+  }, [searchParams]);
 
-    const [username, setUsername] = React.useState();
-    const [password, setPassword] = React.useState();
-    const [name, setName] = React.useState();
-    const [error, setError] = React.useState();
-    const [message, setMessage] = React.useState();
-
-
-    const [formState, setFormState] = React.useState(0);
-
-    const [open, setOpen] = React.useState(false)
-
-
-    const { handleRegister, handleLogin } = React.useContext(AuthContext);
-
-    let handleAuth = async () => {
-        try {
-            if (formState === 0) {
-
-                let result = await handleLogin(username, password)
-
-
-            }
-            if (formState === 1) {
-                let result = await handleRegister(name, username, password);
-                console.log(result);
-                setUsername("");
-                setMessage(result);
-                setOpen(true);
-                setError("")
-                setFormState(0)
-                setPassword("")
-            }
-        } catch (err) {
-
-            console.log(err);
-            let message = (err.response.data.message);
-            setError(message);
-        }
+  const changeMode = (nextMode) => setSearchParams({ mode: nextMode });
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError('');
+    try {
+      if (mode === 'signup') {
+        const result = await handleRegister(name, username, password);
+        setMessage(result || 'Account created. Please sign in.');
+        setOpen(true);
+        setPassword('');
+        changeMode('login');
+      } else {
+        await handleLogin(username, password);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Unable to continue. Please try again.');
     }
+  };
 
-
-    return (
-        <ThemeProvider theme={defaultTheme}>
-            <Grid container component="main" sx={{ height: '100vh' }}>
-                <CssBaseline />
-                <Grid
-                    item
-                    xs={false}
-                    sm={4}
-                    md={7}
-                    sx={{
-                        backgroundImage: 'url(https://source.unsplash.com/random?wallpapers)',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundColor: (t) =>
-                            t.palette.mode === 'light' ? t.palette.grey[50] : t.palette.grey[900],
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                    }}
-                />
-                <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
-                    <Box
-                        sx={{
-                            my: 8,
-                            mx: 4,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                        }}
-                    >
-                        <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-                            <LockOutlinedIcon />
-                        </Avatar>
-
-
-                        <div>
-                            <Button variant={formState === 0 ? "contained" : ""} onClick={() => { setFormState(0) }}>
-                                Sign In
-                            </Button>
-                            <Button variant={formState === 1 ? "contained" : ""} onClick={() => { setFormState(1) }}>
-                                Sign Up
-                            </Button>
-                        </div>
-
-                        <Box component="form" noValidate sx={{ mt: 1 }}>
-                            {formState === 1 ? <TextField
-                                margin="normal"
-                                required
-                                fullWidth
-                                id="username"
-                                label="Full Name"
-                                name="username"
-                                value={name}
-                                autoFocus
-                                onChange={(e) => setName(e.target.value)}
-                            /> : <></>}
-
-                            <TextField
-                                margin="normal"
-                                required
-                                fullWidth
-                                id="username"
-                                label="Username"
-                                name="username"
-                                value={username}
-                                autoFocus
-                                onChange={(e) => setUsername(e.target.value)}
-
-                            />
-                            <TextField
-                                margin="normal"
-                                required
-                                fullWidth
-                                name="password"
-                                label="Password"
-                                value={password}
-                                type="password"
-                                onChange={(e) => setPassword(e.target.value)}
-
-                                id="password"
-                            />
-
-                            <p style={{ color: "red" }}>{error}</p>
-
-                            <Button
-                                type="button"
-                                fullWidth
-                                variant="contained"
-                                sx={{ mt: 3, mb: 2 }}
-                                onClick={handleAuth}
-                            >
-                                {formState === 0 ? "Login " : "Register"}
-                            </Button>
-
-                        </Box>
-                    </Box>
-                </Grid>
-            </Grid>
-
-            <Snackbar
-
-                open={open}
-                autoHideDuration={4000}
-                message={message}
-            />
-
-        </ThemeProvider>
-    );
+  return (
+    <div className="authPage">
+      <section className="authVisual">
+        <div className="authBrand" onClick={() => navigate('/')} role="button" tabIndex={0}>Webcrat Call</div>
+        <div className="authPitch"><p>VIDEO CALLS, MADE WARMER</p><h1>Every conversation feels closer.</h1><span>Meet, laugh, collaborate and stay connected from anywhere.</span></div>
+      </section>
+      <section className="authPanel">
+        <div className="authCard">
+          <button className="backButton" onClick={() => navigate('/')}>? Back home</button>
+          <p className="authKicker">WELCOME TO WEBCRAT</p>
+          <h2>{mode === 'login' ? 'Welcome back' : 'Create your account'}</h2>
+          <p className="authSubtext">{mode === 'login' ? 'Sign in to continue to your calls.' : 'Start meeting the people who matter.'}</p>
+          <div className="authTabs">
+            <button className={mode === 'login' ? 'active' : ''} onClick={() => changeMode('login')}>Sign in</button>
+            <button className={mode === 'signup' ? 'active' : ''} onClick={() => changeMode('signup')}>Sign up</button>
+          </div>
+          <form onSubmit={handleSubmit} className="authForm">
+            {mode === 'signup' && <TextField required fullWidth label="Full name" value={name} onChange={(e) => setName(e.target.value)} />}
+            <TextField required fullWidth label="Username" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
+            <TextField required fullWidth label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
+            {error && <p className="authError">{error}</p>}
+            <Button type="submit" fullWidth variant="contained" className="authSubmit">{mode === 'login' ? 'Sign in' : 'Create account'}</Button>
+          </form>
+          <p className="authSwitch">{mode === 'login' ? 'New here?' : 'Already have an account?'} <button onClick={() => changeMode(mode === 'login' ? 'signup' : 'login')}>{mode === 'login' ? 'Create an account' : 'Sign in'}</button></p>
+        </div>
+      </section>
+      <Snackbar open={open} autoHideDuration={4000} onClose={() => setOpen(false)} message={message} />
+    </div>
+  );
 }

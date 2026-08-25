@@ -45,12 +45,9 @@ export const AuthProvider = ({ children }) => {
                 username: username,
                 password: password
             });
-
-            console.log(username, password)
-            console.log(request.data)
-
             if (request.status === httpStatus.OK) {
                 localStorage.setItem("token", request.data.token);
+                localStorage.setItem("username", username);
                 router("/home")
             }
         } catch (err) {
@@ -84,9 +81,34 @@ export const AuthProvider = ({ children }) => {
         }
     }
 
+    const saveTranscript = async (meetingCode, entries) => {
+        try {
+            let request = await client.post("/save_transcript", {
+                token: localStorage.getItem("token"),
+                meeting_code: meetingCode,
+                entries: entries
+            });
+            return request
+        } catch (e) {
+            throw e;
+        }
+    }
+
+    const summarizeMeeting = async (meetingCode) => {
+        try {
+            let request = await client.post("/summarize_meeting", {
+                token: localStorage.getItem("token"),
+                meeting_code: meetingCode
+            });
+            return request.data
+        } catch (e) {
+            throw e;
+        }
+    }
+
 
     const data = {
-        userData, setUserData, addToUserHistory, getHistoryOfUser, handleRegister, handleLogin
+        userData, setUserData, addToUserHistory, getHistoryOfUser, saveTranscript, summarizeMeeting, handleRegister, handleLogin
     }
 
     return (

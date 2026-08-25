@@ -3,11 +3,15 @@ import { createServer } from "node:http";
 import cors from "cors";
 import mongoose from "mongoose";
 
+import "dotenv/config";
+
 import { connectToSocket } from "./src/controllers/socketManager.js";
 import userRoutes from "./src/routes/user.routes.js";
 
+const clientOrigin = process.env.CLIENT_ORIGIN || "http://localhost:3000";
+
 const app = express();
-app.use(cors());
+app.use(cors({ origin: clientOrigin }));
 app.use(express.json());
 
 const server = createServer(app);
@@ -30,7 +34,7 @@ app.get("/home", (req, res) => {
 const start = async () => {
     try {
         await mongoose.connect(
-            "mongodb+srv://darshana:test123@meeting-app.l8lqzdw.mongodb.net/?retryWrites=true&w=majority&appName=meeting-app"
+           process.env.MONGO_URI
         );
         console.log("MongoDB connected");
 
@@ -39,6 +43,7 @@ const start = async () => {
         });
     } catch (err) {
         console.error("MongoDB connection error:", err);
+        process.exitCode = 1;
     }
 };
 

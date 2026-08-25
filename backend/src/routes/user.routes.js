@@ -1,17 +1,14 @@
 import { Router } from "express";
-import { login, register } from "../controllers/user.controller.js"; // go up one level
+import { addToActivity, getAllActivity, getTranscript, login, register, saveTranscript, summarizeMeeting } from "../controllers/user.controller.js";
 
 const router = Router();
 
 router.post("/login", login);
 router.post("/register", register);
-
-// Example activity routes (placeholders)
-router.post("/add_to_activity", (req, res) => {
-    res.json({ message: "Activity added" });
-});
-router.get("/get_all_activity", (req, res) => {
-    res.json({ message: "All activities returned" });
-});
+router.post("/add_to_activity", addToActivity);
+router.get("/get_all_activity", getAllActivity);
+router.post("/save_transcript", saveTranscript);
+router.get("/get_transcript", getTranscript);
+router.post("/summarize_meeting", summarizeMeeting);
 
 export default router;
