@@ -1,0 +1,3 @@
+html, body, #root { min-height: 100%; }
+body { margin: 0; font-family: "DM Sans", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+code { font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace; }
