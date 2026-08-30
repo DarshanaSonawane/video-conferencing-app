@@ -1,0 +1,46 @@
+name: Deploy Video Conferencing App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/video-conferencing-app
+
+            git pull origin main
+
+            echo "Installing backend dependencies..."
+            cd backend
+            npm install
+
+            echo "Restarting backend..."
+            pm2 restart video-conferencing-backend --update-env
+
+            echo "Building frontend..."
+            cd ../frontend
+            npm install
+            npm run build
+
+            echo "Deploying frontend..."
+            sudo rm -rf /usr/share/nginx/html/*
+            sudo cp -r build/* /usr/share/nginx/html/
+
+            echo "Reloading Nginx..."
+            sudo systemctl reload nginx
+
+            echo "Deployment completed!"
